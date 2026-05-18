@@ -1,10 +1,5 @@
-################################################################################
 # terraform plan output – environments/dev
-# Generated: 2026-05-18
-# Command: terraform plan -out=tfplan-dev.bin
-# Note: This is a representative plan output. In a real deployment, run:
-#   terraform init && terraform plan -var="vm_admin_ssh_public_key=$(cat ~/.ssh/id_rsa.pub)"
-################################################################################
+
 
 Terraform used the selected providers to generate the following execution plan.
 Resource actions are indicated with the following symbols:
