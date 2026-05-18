@@ -1,10 +1,8 @@
-###############################################################################
 # Environment: dev – Variables
-###############################################################################
 
 variable "app_name" {
   type        = string
-  description = "Short application or project name used in resource naming (lowercase, no spaces)."
+  description = "Short application or project name used in resource naming"
   default     = "myapp"
 
   validation {
@@ -66,7 +64,7 @@ variable "subnet_data_cidr" {
 variable "allowed_ssh_cidr" {
   type        = string
   description = "Source IP/CIDR allowed to SSH into the VM. Restrict to your office or VPN IP."
-  default     = "0.0.0.0/0" # CHANGE in production!
+  default     = "0.0.0.0/0" 
 }
 
 # ── Storage ─────────────────────────────────────────────────────────────────
