@@ -26,12 +26,12 @@ terraform {
   }
 
   # Remote state – uncomment and configure for real deployments
-  # backend "azurerm" {
-  #   resource_group_name  = "rg-tfstate"
-  #   storage_account_name = "satfstate<unique>"
-  #   container_name       = "tfstate"
-  #   key                  = "dev/terraform.tfstate"
-  # }
+   backend "azurerm" {
+     resource_group_name  = "rg-tfstate"
+     storage_account_name = "satfstate<unique>"
+     container_name       = "tfstate"
+     key                  = "dev/terraform.tfstate"
+   }
 }
 
 provider "azurerm" {
@@ -53,7 +53,7 @@ locals {
   rg_name      = "rg-${local.name_prefix}"
   vnet_name    = "vnet-${local.name_prefix}"
   vm_name      = "vm-${local.name_prefix}"
-  # Storage account names: lowercase, no hyphens, max 24 chars
+  # Storage account names: lowercase, no hyphens, max 24 chars(keeping this nomenclature in picture using string formation)
   sa_name      = lower(replace("sa${var.app_name}${var.environment}${var.region_short}", "-", ""))
 
   # ── Mandatory tags (applied to every resource) ─────────────────────────────
