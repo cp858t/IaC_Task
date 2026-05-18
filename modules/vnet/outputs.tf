@@ -4,13 +4,13 @@
 # Why these outputs?
 # - vnet_id / vnet_name: Required by downstream modules (e.g., VM, AKS) that
 #   must reference the VNET when creating NICs or peering.
-# - subnet_ids: Callers almost always need to place resources in specific
+# - subnet_ids: Almost always need to place resources in specific
 #   subnets; returning a map keyed by name prevents hardcoding IDs.
 # - subnet_address_prefixes: Useful for building firewall / NSG rules in
 #   the calling module without duplicating CIDR values.
-# - nsg_ids: Allows callers to attach additional rules or diagnostics to NSGs
+# - nsg_ids: Allows to attach additional rules or diagnostics to NSGs
 #   created by this module.
-# - vnet_address_space: Handy for peering configurations or documentation.
+# - vnet_address_space: Needed for peering
 ###############################################################################
 
 output "vnet_id" {
@@ -19,12 +19,12 @@ output "vnet_id" {
 }
 
 output "vnet_name" {
-  description = "The name of the Virtual Network."
+  description = "Name of the Virtual Network."
   value       = azurerm_virtual_network.this.name
 }
 
 output "vnet_address_space" {
-  description = "The address space(s) of the Virtual Network."
+  description = "Address space(s) of the Virtual Network."
   value       = azurerm_virtual_network.this.address_space
 }
 
