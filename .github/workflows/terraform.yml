@@ -64,11 +64,10 @@ defaults:
 
 permissions:
   contents: read
-  pull-requests: write  # allows posting plan output as PR comment
+  pull-requests: write  
 
-###############################################################################
 # Job 1: Validate & lint (runs on every PR and push)
-###############################################################################
+
 jobs:
   validate:
     name: "Validate & Lint"
@@ -100,14 +99,14 @@ jobs:
         run: |
           terraform init -backend=false
           terraform validate
-          echo "✅ Dev environment validation passed"
+          echo " Dev environment validation passed"
 
       - name: Validate prod environment
         working-directory: environments/prod
         run: |
           terraform init -backend=false
           terraform validate
-          echo "✅ Prod environment validation passed"
+          echo " Prod environment validation passed"
 
       - name: Install tflint
         run: |
@@ -131,9 +130,7 @@ jobs:
           terraform-docs markdown table --output-file README.md modules/vnet
           echo " Module docs refreshed"
 
-###############################################################################
 # Job 2: Plan dev (runs on PR and on push to main)
-###############################################################################
   plan-dev:
     name: "Plan – dev"
     runs-on: ubuntu-latest
@@ -183,9 +180,7 @@ jobs:
           path: environments/dev/tfplan-dev.bin
           retention-days: 7
 
-###############################################################################
 # Job 3: Apply dev (runs only on push to main, after plan)
-###############################################################################
   apply-dev:
     name: "Apply – dev"
     runs-on: ubuntu-latest
@@ -216,15 +211,14 @@ jobs:
           TF_VAR_vm_admin_ssh_public_key: ${{ secrets.VM_SSH_PUBLIC_KEY }}
         run: terraform apply -auto-approve tfplan-dev.bin
 
-###############################################################################
+
 # Job 4: Plan prod (runs after dev apply, requires manual approval)
-###############################################################################
   plan-prod:
     name: "Plan – prod"
     runs-on: ubuntu-latest
     needs: apply-dev
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: prod-plan  # configure this environment with no approval gate
+    environment: prod-plan  
 
     steps:
       - uses: actions/checkout@v4
@@ -250,14 +244,13 @@ jobs:
           path: environments/prod/tfplan-prod.bin
           retention-days: 7
 
-###############################################################################
 # Job 5: Apply prod (requires manual approval via GitHub environment protection)
-###############################################################################
+#
   apply-prod:
     name: "Apply – prod"
     runs-on: ubuntu-latest
     needs: plan-prod
-    environment: prod  # ← configure "Required reviewers" here in GitHub Settings
+    environment: prod  
 
     steps:
       - uses: actions/checkout@v4
