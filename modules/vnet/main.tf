@@ -1,7 +1,5 @@
-###############################################################################
 # Module: vnet
-# Purpose: Reusable Azure Virtual Network module with optional security features
-###############################################################################
+
 
 terraform {
   required_providers {
@@ -13,7 +11,6 @@ terraform {
 }
 
 locals {
-  # Merge caller-supplied tags with mandatory module-level tags
   base_tags = {
     module      = "vnet"
     managed_by  = "terraform"
@@ -23,9 +20,9 @@ locals {
   tags = merge(local.base_tags, var.tags)
 }
 
-# ---------------------------------------------------------------------------
+
 # Virtual Network
-# ---------------------------------------------------------------------------
+
 resource "azurerm_virtual_network" "this" {
   name                = var.vnet_name
   location            = var.location
@@ -35,9 +32,9 @@ resource "azurerm_virtual_network" "this" {
   tags                = local.tags
 }
 
-# ---------------------------------------------------------------------------
+
 # Subnets
-# ---------------------------------------------------------------------------
+
 resource "azurerm_subnet" "this" {
   for_each = { for s in var.subnets : s.name => s }
 
@@ -58,9 +55,9 @@ resource "azurerm_subnet" "this" {
   }
 }
 
-# ---------------------------------------------------------------------------
+
 # Network Security Groups (one per subnet that requests one)
-# ---------------------------------------------------------------------------
+
 resource "azurerm_network_security_group" "this" {
   for_each = {
     for s in var.subnets : s.name => s
@@ -115,9 +112,9 @@ resource "azurerm_subnet_network_security_group_association" "this" {
   network_security_group_id = azurerm_network_security_group.this[each.key].id
 }
 
-# ---------------------------------------------------------------------------
-# DDoS Protection Plan (optional)
-# ---------------------------------------------------------------------------
+
+# DDoS Protection Plan (optional for security)
+
 resource "azurerm_network_ddos_protection_plan" "this" {
   count               = var.enable_ddos_protection ? 1 : 0
   name                = "ddos-${var.vnet_name}"
@@ -126,9 +123,9 @@ resource "azurerm_network_ddos_protection_plan" "this" {
   tags                = local.tags
 }
 
-# ---------------------------------------------------------------------------
+
 # Network Watcher (optional – one per region per subscription recommended)
-# ---------------------------------------------------------------------------
+--
 resource "azurerm_network_watcher" "this" {
   count               = var.create_network_watcher ? 1 : 0
   name                = "nw-${var.environment}-${var.location}"
