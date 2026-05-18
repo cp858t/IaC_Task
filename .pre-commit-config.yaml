@@ -12,7 +12,7 @@
 #   checkov            – CIS/NIST compliance scanning
 #   detect-secrets     – catch accidental secret commits
 #   end-of-file-fixer  – POSIX compliance
-#   trailing-whitespace
+
 
 repos:
   # ── Terraform ──────────────────────────────────────────────────────────────
