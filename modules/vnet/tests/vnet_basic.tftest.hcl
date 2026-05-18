@@ -1,10 +1,6 @@
-###############################################################################
+
 # Module: vnet – Native Terraform Tests
-# Run: cd modules/vnet && terraform test
-#
-# Requirements: Azure credentials with Contributor on a test subscription.
-# These tests CREATE and DESTROY real resources; they complete in ~2 minutes.
-###############################################################################
+
 
 # ── Provider configuration ──────────────────────────────────────────────────
 provider "azurerm" {
@@ -132,7 +128,7 @@ run "validation_invalid_environment" {
     vnet_name           = "vnet-test"
     location            = "eastus"
     resource_group_name = "rg-test"
-    environment         = "qa" # invalid – must be dev|staging|prod
+    environment         = "qa" # invalid – must be dev|staging|prod (needed so as to have some hold on env)
     address_space       = ["10.0.0.0/16"]
     subnets             = []
   }
