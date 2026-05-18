@@ -4,9 +4,9 @@
 #
 # Resources deployed:
 #   - Resource Group
-#   - VNET (via reusable module)
+#   - VNET (via tf module)
 #   - Storage Account + Blob container (cheap, useful for dev artifacts/logs)
-#   - Linux Virtual Machine (dev workstation / build agent)
+#   - Linux Virtual Machine (dev VM / build agent)
 #   - Public IP + NIC for the VM
 #   - Managed Disk (data volume)
 ###############################################################################
@@ -25,7 +25,6 @@ terraform {
     }
   }
 
-  # Remote state – uncomment and configure for real deployments
    backend "azurerm" {
      resource_group_name  = "rg-tfstate"
      storage_account_name = "satfstate<unique>"
@@ -48,7 +47,6 @@ provider "azurerm" {
 }
 
 locals {
-  # ── Naming convention: <type>-<app>-<env>-<region_short> ──────────────────
   name_prefix  = "${var.app_name}-${var.environment}-${var.region_short}"
   rg_name      = "rg-${local.name_prefix}"
   vnet_name    = "vnet-${local.name_prefix}"
@@ -77,7 +75,7 @@ resource "azurerm_resource_group" "main" {
 }
 
 # ---------------------------------------------------------------------------
-# VNET  (reusable module)
+# VNET  (tf module)
 # ---------------------------------------------------------------------------
 module "vnet" {
   source = "../../modules/vnet"
