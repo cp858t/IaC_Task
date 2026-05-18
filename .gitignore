@@ -1,40 +1,14 @@
-# Terraform state and plans — NEVER commit these
+
 *.tfstate
 *.tfstate.*
 *.tfplan
 *.bin
 .terraform/
 .terraform.lock.hcl
-
-# Crash log files
 crash.log
 crash.*.log
-
-# Sensitive variable files — use CI secrets instead
 *.tfvars.local
 secrets.auto.tfvars
-override.tf
-override.tf.json
 *_override.tf
 *_override.tf.json
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Python (pre-commit, checkov)
-__pycache__/
-*.pyc
-.venv/
-
-# Node (for any JS tooling)
-node_modules/
-
-# Docs build artifacts
 .terraform-docs-cache/
