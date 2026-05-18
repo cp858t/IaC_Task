@@ -1,9 +1,9 @@
 ###############################################################################
 # Environment: prod
-# Region:      westus2 (different region for resilience demonstration)
+# Region:      westus2 (different region for resilience/HA demonstration)
 #
 # Key differences from dev:
-#   - Larger VM SKU
+#   - Larger VM SKU vs dev
 #   - Zone-redundant storage (ZRS)
 #   - DDoS protection enabled on VNET
 #   - Stricter NSG rules (no public SSH — use Bastion or private VPN)
@@ -24,12 +24,12 @@ terraform {
     }
   }
 
-  # backend "azurerm" {
-  #   resource_group_name  = "rg-tfstate"
-  #   storage_account_name = "satfstate<unique>"
-  #   container_name       = "tfstate"
-  #   key                  = "prod/terraform.tfstate"
-  # }
+  backend "azurerm" {
+     resource_group_name  = "rg-tfstate"
+     storage_account_name = "satfstate<unique>"
+     container_name       = "tfstate"
+     key                  = "prod/terraform.tfstate"
+   }
 }
 
 provider "azurerm" {
@@ -77,7 +77,7 @@ module "vnet" {
   environment         = var.environment
   address_space       = var.vnet_address_space
 
-  # Prod: DDoS protection (comment out if Azure free tier doesn't cover it)
+  # Prod: DDoS protection 
   enable_ddos_protection = var.enable_ddos_protection
 
   subnets = [
@@ -86,7 +86,6 @@ module "vnet" {
       address_prefixes = [var.subnet_app_cidr]
       create_nsg       = true
       nsg_rules = [
-        # No direct public SSH in prod — use Azure Bastion or VPN
         {
           name                   = "allow-https-inbound"
           priority               = 100
