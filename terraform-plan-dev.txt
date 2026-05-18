@@ -1,0 +1,457 @@
+################################################################################
+# terraform plan output – environments/dev
+# Generated: 2026-05-18
+# Command: terraform plan -out=tfplan-dev.bin
+# Note: This is a representative plan output. In a real deployment, run:
+#   terraform init && terraform plan -var="vm_admin_ssh_public_key=$(cat ~/.ssh/id_rsa.pub)"
+################################################################################
+
+Terraform used the selected providers to generate the following execution plan.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # azurerm_linux_virtual_machine.main will be created
+  + resource "azurerm_linux_virtual_machine" "main" {
+      + admin_username                                         = "azureadmin"
+      + allow_extension_operations                             = true
+      + bypass_platform_safety_checks_on_user_schedule_enabled = false
+      + computer_name                                          = (known after apply)
+      + disable_password_authentication                        = true
+      + extensions_time_budget                                 = "PT1H30M"
+      + id                                                     = (known after apply)
+      + location                                               = "eastus"
+      + max_bid_price                                          = -1
+      + name                                                   = "vm-myapp-dev-eus"
+      + network_interface_ids                                  = (known after apply)
+      + patch_assessment_mode                                  = "ImageDefault"
+      + patch_mode                                             = "ImageDefault"
+      + platform_fault_domain                                  = -1
+      + priority                                               = "Regular"
+      + private_ip_address                                     = (known after apply)
+      + private_ip_addresses                                   = (known after apply)
+      + provision_vm_agent                                     = true
+      + public_ip_address                                      = (known after apply)
+      + resource_group_name                                    = "rg-myapp-dev-eus"
+      + size                                                   = "Standard_B2s"
+      + tags                                                   = {
+          + "app"         = "myapp"
+          + "cost_center" = "engineering"
+          + "environment" = "dev"
+          + "managed_by"  = "terraform"
+          + "owner"       = "platform-team"
+          + "region"      = "eastus"
+        }
+      + virtual_machine_id                                     = (known after apply)
+
+      + admin_ssh_key {
+          + public_key = (sensitive value)
+          + username   = "azureadmin"
+        }
+
+      + identity {
+          + principal_id = (known after apply)
+          + tenant_id    = (known after apply)
+          + type         = "SystemAssigned"
+        }
+
+      + os_disk {
+          + caching                   = "ReadWrite"
+          + disk_size_gb              = 64
+          + name                      = "osdisk-vm-myapp-dev-eus"
+          + storage_account_type      = "Standard_LRS"
+          + write_accelerator_enabled = false
+        }
+
+      + source_image_reference {
+          + offer     = "0001-com-ubuntu-server-jammy"
+          + publisher = "Canonical"
+          + sku       = "22_04-lts-gen2"
+          + version   = "latest"
+        }
+    }
+
+  # azurerm_managed_disk.data will be created
+  + resource "azurerm_managed_disk" "data" {
+      + create_option                     = "Empty"
+      + disk_iops_read_only               = (known after apply)
+      + disk_iops_read_write              = (known after apply)
+      + disk_mbps_read_only               = (known after apply)
+      + disk_mbps_read_write              = (known after apply)
+      + disk_size_gb                      = 32
+      + id                                = (known after apply)
+      + location                          = "eastus"
+      + logical_sector_size               = (known after apply)
+      + max_shares                        = (known after apply)
+      + name                              = "disk-data-vm-myapp-dev-eus"
+      + performance_plus_enabled          = false
+      + public_network_access_enabled     = true
+      + resource_group_name               = "rg-myapp-dev-eus"
+      + storage_account_type              = "Standard_LRS"
+      + tags                              = {
+          + "app"         = "myapp"
+          + "cost_center" = "engineering"
+          + "environment" = "dev"
+          + "managed_by"  = "terraform"
+          + "owner"       = "platform-team"
+          + "region"      = "eastus"
+        }
+      + tier                              = (known after apply)
+    }
+
+  # azurerm_network_interface.vm will be created
+  + resource "azurerm_network_interface" "vm" {
+      + applied_dns_servers           = (known after apply)
+      + dns_servers                   = (known after apply)
+      + enable_accelerated_networking = false
+      + enable_ip_forwarding          = false
+      + id                            = (known after apply)
+      + internal_domain_name_suffix   = (known after apply)
+      + location                      = "eastus"
+      + mac_address                   = (known after apply)
+      + name                          = "nic-vm-myapp-dev-eus"
+      + private_ip_address            = (known after apply)
+      + private_ip_addresses          = (known after apply)
+      + resource_group_name           = "rg-myapp-dev-eus"
+      + tags                                            = {
+          + "app"         = "myapp"
+          + "cost_center" = "engineering"
+          + "environment" = "dev"
+          + "managed_by"  = "terraform"
+          + "owner"       = "platform-team"
+          + "region"      = "eastus"
+        }
+      + virtual_machine_id            = (known after apply)
+
+      + ip_configuration {
+          + gateway_load_balancer_frontend_ip_configuration_id = (known after apply)
+          + name                                               = "internal"
+          + primary                                            = (known after apply)
+          + private_ip_address                                 = (known after apply)
+          + private_ip_address_allocation                      = "Dynamic"
+          + private_ip_address_version                         = "IPv4"
+          + public_ip_address_id                               = (known after apply)
+          + subnet_id                                          = (known after apply)
+        }
+    }
+
+  # azurerm_network_security_group.this["snet-app"] will be created (via module)
+  + resource "azurerm_network_security_group" "this" {
+      + id                  = (known after apply)
+      + location            = "eastus"
+      + name                = "nsg-snet-app"
+      + resource_group_name = "rg-myapp-dev-eus"
+      + security_rule       = (known after apply)
+      + tags                = {
+          + "environment" = "dev"
+          + "managed_by"  = "terraform"
+          + "module"      = "vnet"
+          + "region"      = "eastus"
+        }
+    }
+
+  # azurerm_network_security_group.this["snet-data"] will be created (via module)
+  + resource "azurerm_network_security_group" "this" {
+      + id                  = (known after apply)
+      + location            = "eastus"
+      + name                = "nsg-snet-data"
+      + resource_group_name = "rg-myapp-dev-eus"
+      + security_rule       = (known after apply)
+      + tags                = {
+          + "environment" = "dev"
+          + "managed_by"  = "terraform"
+          + "module"      = "vnet"
+          + "region"      = "eastus"
+        }
+    }
+
+  # azurerm_network_security_rule.this["snet-app-allow-https-inbound"] will be created
+  + resource "azurerm_network_security_rule" "this" {
+      + access                      = "Allow"
+      + destination_address_prefix  = "*"
+      + destination_port_range      = "443"
+      + direction                   = "Inbound"
+      + id                          = (known after apply)
+      + name                        = "allow-https-inbound"
+      + network_security_group_name = "nsg-snet-app"
+      + priority                    = 110
+      + protocol                    = "Tcp"
+      + resource_group_name         = "rg-myapp-dev-eus"
+      + source_address_prefix       = "*"
+      + source_port_range           = "*"
+    }
+
+  # azurerm_network_security_rule.this["snet-app-allow-ssh-inbound"] will be created
+  + resource "azurerm_network_security_rule" "this" {
+      + access                      = "Allow"
+      + destination_address_prefix  = "*"
+      + destination_port_range      = "22"
+      + direction                   = "Inbound"
+      + id                          = (known after apply)
+      + name                        = "allow-ssh-inbound"
+      + network_security_group_name = "nsg-snet-app"
+      + priority                    = 100
+      + protocol                    = "Tcp"
+      + resource_group_name         = "rg-myapp-dev-eus"
+      + source_address_prefix       = "0.0.0.0/0"
+      + source_port_range           = "*"
+    }
+
+  # azurerm_network_security_rule.this["snet-app-deny-all-inbound"] will be created
+  + resource "azurerm_network_security_rule" "this" {
+      + access                      = "Deny"
+      + destination_address_prefix  = "*"
+      + destination_port_range      = "*"
+      + direction                   = "Inbound"
+      + id                          = (known after apply)
+      + name                        = "deny-all-inbound"
+      + network_security_group_name = "nsg-snet-app"
+      + priority                    = 4096
+      + protocol                    = "*"
+      + resource_group_name         = "rg-myapp-dev-eus"
+      + source_address_prefix       = "*"
+      + source_port_range           = "*"
+    }
+
+  # azurerm_network_security_rule.this["snet-data-allow-app-subnet"] will be created
+  + resource "azurerm_network_security_rule" "this" {
+      + access                      = "Allow"
+      + destination_address_prefix  = "*"
+      + destination_port_ranges     = ["1433","3306","5432"]
+      + direction                   = "Inbound"
+      + id                          = (known after apply)
+      + name                        = "allow-app-subnet"
+      + network_security_group_name = "nsg-snet-data"
+      + priority                    = 100
+      + protocol                    = "Tcp"
+      + resource_group_name         = "rg-myapp-dev-eus"
+      + source_address_prefix       = "10.10.1.0/24"
+      + source_port_range           = "*"
+    }
+
+  # azurerm_network_security_rule.this["snet-data-deny-all-inbound"] will be created
+  + resource "azurerm_network_security_rule" "this" {
+      + access                      = "Deny"
+      + destination_address_prefix  = "*"
+      + destination_port_range      = "*"
+      + direction                   = "Inbound"
+      + id                          = (known after apply)
+      + name                        = "deny-all-inbound"
+      + network_security_group_name = "nsg-snet-data"
+      + priority                    = 4096
+      + protocol                    = "*"
+      + resource_group_name         = "rg-myapp-dev-eus"
+      + source_address_prefix       = "*"
+      + source_port_range           = "*"
+    }
+
+  # azurerm_public_ip.vm will be created
+  + resource "azurerm_public_ip" "vm" {
+      + allocation_method       = "Static"
+      + ddos_protection_mode    = "VirtualNetworkInherited"
+      + fqdn                    = (known after apply)
+      + id                      = (known after apply)
+      + idle_timeout_in_minutes = 4
+      + ip_address              = (known after apply)
+      + ip_version              = "IPv4"
+      + location                = "eastus"
+      + name                    = "pip-vm-myapp-dev-eus"
+      + resource_group_name     = "rg-myapp-dev-eus"
+      + sku                     = "Standard"
+      + sku_tier                = "Regional"
+      + tags                    = {
+          + "app"         = "myapp"
+          + "cost_center" = "engineering"
+          + "environment" = "dev"
+          + "managed_by"  = "terraform"
+          + "owner"       = "platform-team"
+          + "region"      = "eastus"
+        }
+    }
+
+  # azurerm_resource_group.main will be created
+  + resource "azurerm_resource_group" "main" {
+      + id       = (known after apply)
+      + location = "eastus"
+      + name     = "rg-myapp-dev-eus"
+      + tags     = {
+          + "app"         = "myapp"
+          + "cost_center" = "engineering"
+          + "environment" = "dev"
+          + "managed_by"  = "terraform"
+          + "owner"       = "platform-team"
+          + "region"      = "eastus"
+        }
+    }
+
+  # azurerm_role_assignment.vm_storage_reader will be created
+  + resource "azurerm_role_assignment" "vm_storage_reader" {
+      + id                               = (known after apply)
+      + name                             = (known after apply)
+      + principal_id                     = (known after apply)
+      + principal_type                   = (known after apply)
+      + role_definition_id               = (known after apply)
+      + role_definition_name             = "Storage Blob Data Contributor"
+      + scope                            = (known after apply)
+      + skip_service_principal_aad_check = false
+    }
+
+  # azurerm_storage_account.main will be created
+  + resource "azurerm_storage_account" "main" {
+      + access_tier                       = (known after apply)
+      + account_kind                      = "StorageV2"
+      + account_replication_type          = "LRS"
+      + account_tier                      = "Standard"
+      + allow_nested_items_to_be_public   = false
+      + cross_tenant_replication_enabled  = true
+      + default_to_oauth_authentication   = false
+      + dns_endpoint_type                 = "Standard"
+      + enable_https_traffic_only         = true
+      + id                                = (known after apply)
+      + infrastructure_encryption_enabled = false
+      + is_hns_enabled                    = false
+      + large_file_share_enabled          = (known after apply)
+      + local_user_enabled                = true
+      + location                          = "eastus"
+      + min_tls_version                   = "TLS1_2"
+      + name                              = "samyappdeveus"
+      + nfsv3_enabled                     = false
+      + primary_access_key                = (sensitive value)
+      + primary_blob_endpoint             = (known after apply)
+      + primary_connection_string         = (sensitive value)
+      + primary_dfs_endpoint              = (known after apply)
+      + primary_file_endpoint             = (known after apply)
+      + primary_location                  = (known after apply)
+      + primary_queue_endpoint            = (known after apply)
+      + primary_table_endpoint            = (known after apply)
+      + primary_web_endpoint              = (known after apply)
+      + public_network_access_enabled     = true
+      + queue_encryption_key_type         = "Service"
+      + resource_group_name               = "rg-myapp-dev-eus"
+      + secondary_access_key              = (sensitive value)
+      + secondary_connection_string       = (sensitive value)
+      + sftp_enabled                      = false
+      + shared_access_key_enabled         = true
+      + table_encryption_key_type         = "Service"
+      + tags                              = {
+          + "app"         = "myapp"
+          + "cost_center" = "engineering"
+          + "environment" = "dev"
+          + "managed_by"  = "terraform"
+          + "owner"       = "platform-team"
+          + "region"      = "eastus"
+        }
+    }
+
+  # azurerm_storage_container.artifacts will be created
+  + resource "azurerm_storage_container" "artifacts" {
+      + container_access_type             = "private"
+      + has_immutability_policy           = (known after apply)
+      + has_legal_hold                    = (known after apply)
+      + id                                = (known after apply)
+      + metadata                          = (known after apply)
+      + name                              = "artifacts"
+      + resource_manager_id               = (known after apply)
+      + storage_account_name              = "samyappdeveus"
+    }
+
+  # azurerm_storage_container.logs will be created
+  + resource "azurerm_storage_container" "logs" {
+      + container_access_type             = "private"
+      + has_immutability_policy           = (known after apply)
+      + has_legal_hold                    = (known after apply)
+      + id                                = (known after apply)
+      + metadata                          = (known after apply)
+      + name                              = "logs"
+      + resource_manager_id               = (known after apply)
+      + storage_account_name              = "samyappdeveus"
+    }
+
+  # azurerm_subnet.this["snet-app"] will be created (via module)
+  + resource "azurerm_subnet" "this" {
+      + address_prefixes                               = ["10.10.1.0/24"]
+      + enforce_private_link_endpoint_network_policies = (known after apply)
+      + enforce_private_link_service_network_policies  = (known after apply)
+      + id                                             = (known after apply)
+      + name                                           = "snet-app"
+      + private_endpoint_network_policies_enabled      = (known after apply)
+      + private_link_service_network_policies_enabled  = (known after apply)
+      + resource_group_name                            = "rg-myapp-dev-eus"
+      + virtual_network_name                           = "vnet-myapp-dev-eus"
+    }
+
+  # azurerm_subnet.this["snet-data"] will be created (via module)
+  + resource "azurerm_subnet" "this" {
+      + address_prefixes                               = ["10.10.2.0/24"]
+      + enforce_private_link_endpoint_network_policies = (known after apply)
+      + enforce_private_link_service_network_policies  = (known after apply)
+      + id                                             = (known after apply)
+      + name                                           = "snet-data"
+      + private_endpoint_network_policies_enabled      = (known after apply)
+      + private_link_service_network_policies_enabled  = (known after apply)
+      + resource_group_name                            = "rg-myapp-dev-eus"
+      + virtual_network_name                           = "vnet-myapp-dev-eus"
+    }
+
+  # azurerm_subnet_network_security_group_association.this["snet-app"] will be created
+  + resource "azurerm_subnet_network_security_group_association" "this" {
+      + id                        = (known after apply)
+      + network_security_group_id = (known after apply)
+      + subnet_id                 = (known after apply)
+    }
+
+  # azurerm_subnet_network_security_group_association.this["snet-data"] will be created
+  + resource "azurerm_subnet_network_security_group_association" "this" {
+      + id                        = (known after apply)
+      + network_security_group_id = (known after apply)
+      + subnet_id                 = (known after apply)
+    }
+
+  # azurerm_virtual_machine_data_disk_attachment.data will be created
+  + resource "azurerm_virtual_machine_data_disk_attachment" "data" {
+      + caching            = "ReadWrite"
+      + create_option      = "Attach"
+      + id                 = (known after apply)
+      + lun                = 10
+      + managed_disk_id    = (known after apply)
+      + virtual_machine_id = (known after apply)
+      + write_accelerator_enabled = false
+    }
+
+  # azurerm_virtual_network.this will be created (via module)
+  + resource "azurerm_virtual_network" "this" {
+      + address_space       = ["10.10.0.0/16"]
+      + dns_servers         = (known after apply)
+      + guid                = (known after apply)
+      + id                  = (known after apply)
+      + location            = "eastus"
+      + name                = "vnet-myapp-dev-eus"
+      + resource_group_name = "rg-myapp-dev-eus"
+      + subnet              = (known after apply)
+      + tags                = {
+          + "environment" = "dev"
+          + "managed_by"  = "terraform"
+          + "module"      = "vnet"
+          + "region"      = "eastus"
+        }
+    }
+
+Plan: 22 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + artifacts_container_name         = "artifacts"
+  + resource_group_name              = "rg-myapp-dev-eus"
+  + storage_account_name             = "samyappdeveus"
+  + storage_account_primary_endpoint = (sensitive value)
+  + subnet_ids                       = (known after apply)
+  + vm_name                          = "vm-myapp-dev-eus"
+  + vm_principal_id                  = (known after apply)
+  + vm_public_ip                     = (known after apply)
+  + vnet_id                          = (known after apply)
+  + vnet_name                        = "vnet-myapp-dev-eus"
+
+────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.

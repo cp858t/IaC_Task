@@ -1,0 +1,70 @@
+---
+# .pre-commit-config.yaml
+#
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+#
+# Tools used:
+#   terraform fmt      – canonical HCL formatting
+#   tflint             – Terraform linting / best-practice checks
+#   tfsec              – static security analysis
+#   terraform-docs     – auto-generate module README
+#   checkov            – CIS/NIST compliance scanning
+#   detect-secrets     – catch accidental secret commits
+#   end-of-file-fixer  – POSIX compliance
+#   trailing-whitespace
+
+repos:
+  # ── Terraform ──────────────────────────────────────────────────────────────
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.92.0
+    hooks:
+      - id: terraform_fmt
+        args: [--args=-recursive]
+
+      - id: terraform_validate
+        args:
+          - --args=-json
+          - --args=-no-color
+
+      - id: terraform_tflint
+        args:
+          - --args=--recursive
+          - --args=--enable-rule=terraform_documented_variables
+          - --args=--enable-rule=terraform_documented_outputs
+          - --args=--enable-rule=terraform_naming_convention
+
+      - id: terraform_docs
+        args:
+          - --hook-config=--path-to-file=README.md
+          - --hook-config=--add-to-existing-file=true
+          - --hook-config=--create-file-if-not-exist=true
+        # Runs terraform-docs on any directory containing *.tf files
+
+      - id: terraform_tfsec
+        args:
+          - --args=--minimum-severity=HIGH
+          - --args=--exclude=azure-virtual-machine-ensure-managed-disk-encryption
+
+      - id: checkov
+        args:
+          - --args=--framework terraform
+          - --args=--quiet
+
+  # ── General ────────────────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: "terraform.tfvars.example"

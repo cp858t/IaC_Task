@@ -1,0 +1,283 @@
+###############################################################################
+# GitHub Actions – Terraform CI/CD
+#
+# Release lifecycle:
+#
+#  ┌──────────┐   PR opened    ┌──────────┐   Merged to main   ┌──────────┐
+#  │  Feature  │ ─────────────▶│  validate │ ──────────────────▶│  plan    │
+#  │  branch   │               │  + plan   │                    │  + apply │
+#  └──────────┘               └──────────┘                    │  (dev)   │
+#                                                              └────┬─────┘
+#                                                                   │ manual approval
+#                                                              ┌────▼─────┐
+#                                                              │  apply   │
+#                                                              │  (prod)  │
+#                                                              └──────────┘
+#
+# Secrets required (set in GitHub → Settings → Secrets and variables):
+#   ARM_CLIENT_ID          – Azure service principal / OIDC app
+#   ARM_TENANT_ID
+#   ARM_SUBSCRIPTION_ID
+#   ARM_CLIENT_SECRET      – omit if using OIDC federated credentials
+#   VM_SSH_PUBLIC_KEY      – SSH public key injected as TF_VAR_vm_admin_ssh_public_key
+###############################################################################
+
+name: Terraform CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "environments/**"
+      - "modules/**"
+      - ".github/workflows/terraform.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "environments/**"
+      - "modules/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy (dev | prod)"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, prod]
+      action:
+        description: "Terraform action"
+        required: true
+        default: "plan"
+        type: choice
+        options: [plan, apply, destroy]
+
+env:
+  TF_VERSION: "1.7.4"
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+  pull-requests: write  # allows posting plan output as PR comment
+
+###############################################################################
+# Job 1: Validate & lint (runs on every PR and push)
+###############################################################################
+jobs:
+  validate:
+    name: "Validate & Lint"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Format Check
+        run: |
+          terraform fmt -check -recursive .
+          echo "✅ Format check passed"
+
+      - name: Validate module
+        working-directory: modules/vnet
+        run: |
+          terraform init -backend=false
+          terraform validate
+          echo "✅ Module validation passed"
+
+      - name: Validate dev environment
+        working-directory: environments/dev
+        run: |
+          terraform init -backend=false
+          terraform validate
+          echo "✅ Dev environment validation passed"
+
+      - name: Validate prod environment
+        working-directory: environments/prod
+        run: |
+          terraform init -backend=false
+          terraform validate
+          echo "✅ Prod environment validation passed"
+
+      - name: Install tflint
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+      - name: Run tflint
+        run: |
+          tflint --recursive
+          echo "✅ tflint passed"
+
+      - name: Run tfsec (security scan)
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          soft_fail: true
+
+      - name: Generate module docs (terraform-docs)
+        run: |
+          curl -Lo /tmp/terraform-docs.tar.gz \
+            https://github.com/terraform-docs/terraform-docs/releases/download/v0.17.0/terraform-docs-v0.17.0-linux-amd64.tar.gz
+          tar -xzf /tmp/terraform-docs.tar.gz -C /usr/local/bin
+          terraform-docs markdown table --output-file README.md modules/vnet
+          echo "📄 Module docs refreshed"
+
+###############################################################################
+# Job 2: Plan dev (runs on PR and on push to main)
+###############################################################################
+  plan-dev:
+    name: "Plan – dev"
+    runs-on: ubuntu-latest
+    needs: validate
+    environment: dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init (dev)
+        working-directory: environments/dev
+        run: terraform init
+
+      - name: Terraform Plan (dev)
+        id: plan
+        working-directory: environments/dev
+        env:
+          TF_VAR_vm_admin_ssh_public_key: ${{ secrets.VM_SSH_PUBLIC_KEY }}
+        run: |
+          terraform plan -out=tfplan-dev.bin -no-color 2>&1 | tee plan-dev.txt
+          echo "plan_exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Post plan to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('environments/dev/plan-dev.txt', 'utf8');
+            const maxLen = 65000;
+            const body = `## Terraform Plan – dev\n\`\`\`\n${plan.substring(0, maxLen)}\n\`\`\``;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-dev
+          path: environments/dev/tfplan-dev.bin
+          retention-days: 7
+
+###############################################################################
+# Job 3: Apply dev (runs only on push to main, after plan)
+###############################################################################
+  apply-dev:
+    name: "Apply – dev"
+    runs-on: ubuntu-latest
+    needs: plan-dev
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init (dev)
+        working-directory: environments/dev
+        run: terraform init
+
+      - name: Download plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-dev
+          path: environments/dev
+
+      - name: Terraform Apply (dev)
+        working-directory: environments/dev
+        env:
+          TF_VAR_vm_admin_ssh_public_key: ${{ secrets.VM_SSH_PUBLIC_KEY }}
+        run: terraform apply -auto-approve tfplan-dev.bin
+
+###############################################################################
+# Job 4: Plan prod (runs after dev apply, requires manual approval)
+###############################################################################
+  plan-prod:
+    name: "Plan – prod"
+    runs-on: ubuntu-latest
+    needs: apply-dev
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: prod-plan  # configure this environment with no approval gate
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init (prod)
+        working-directory: environments/prod
+        run: terraform init
+
+      - name: Terraform Plan (prod)
+        working-directory: environments/prod
+        env:
+          TF_VAR_vm_admin_ssh_public_key: ${{ secrets.VM_SSH_PUBLIC_KEY }}
+        run: terraform plan -out=tfplan-prod.bin -no-color 2>&1 | tee plan-prod.txt
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-prod
+          path: environments/prod/tfplan-prod.bin
+          retention-days: 7
+
+###############################################################################
+# Job 5: Apply prod (requires manual approval via GitHub environment protection)
+###############################################################################
+  apply-prod:
+    name: "Apply – prod"
+    runs-on: ubuntu-latest
+    needs: plan-prod
+    environment: prod  # ← configure "Required reviewers" here in GitHub Settings
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init (prod)
+        working-directory: environments/prod
+        run: terraform init
+
+      - name: Download plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-prod
+          path: environments/prod
+
+      - name: Terraform Apply (prod)
+        working-directory: environments/prod
+        env:
+          TF_VAR_vm_admin_ssh_public_key: ${{ secrets.VM_SSH_PUBLIC_KEY }}
+        run: terraform apply -auto-approve tfplan-prod.bin

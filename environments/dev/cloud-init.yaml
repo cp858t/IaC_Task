@@ -1,0 +1,35 @@
+#cloud-config
+# Cloud-init script for the dev VM.
+# Installs common developer/CI tooling on first boot.
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - git
+  - curl
+  - wget
+  - unzip
+  - jq
+  - htop
+  - build-essential
+  - docker.io
+  - azure-cli
+
+runcmd:
+  # Enable and start Docker
+  - systemctl enable docker
+  - systemctl start docker
+  # Add admin user to docker group
+  - usermod -aG docker ${app_name}admin || true
+  # Install Terraform
+  - curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp.gpg
+  - echo "deb [signed-by=/usr/share/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list
+  - apt-get update && apt-get install -y terraform
+
+write_files:
+  - path: /etc/motd
+    content: |
+      ┌─────────────────────────────────────────┐
+      │  Dev VM · ${app_name} · managed by Terraform  │
+      └─────────────────────────────────────────┘
