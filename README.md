@@ -1,10 +1,11 @@
-# Azure IaC – Terraform Challenge.
+# Azure IaC – Terraform Challenge
 
 Reusable, secure, multi-environment Azure infrastructure using Terraform.
 
 
 ## Repository Structure
 
+```
 IaC_Task/
 ├── modules/
 │   └── vnet/
@@ -33,15 +34,18 @@ IaC_Task/
 │   └── workflows/
 │       └── terraform.yml        # CI/CD pipeline (Flow: validate → plan → apply)
 │
-├── terraform-plan-dev.txt       # Sample plan output(Rough plan- not tested)
+├── terraform-plan-dev.txt       # Sample plan output (Rough plan - not tested)
 ├── .pre-commit-config.yaml      # Code quality hooks
 ├── .gitignore
 └── README.md
+```
 
 
 ## Architecture Overview
-WHAT THE IMPLEMENTATION OF THE MODULE/APPLY WOULD LOOK LIKE:
 
+What the implementation of the module/apply would look like:
+
+```
 Resource Group: rg-myapp-dev-eus
 │
 ├── VNET: vnet-myapp-dev-eus (10.10.0.0/16)
@@ -58,7 +62,7 @@ Resource Group: rg-myapp-dev-eus
 └── Storage Account: samyappdeveus (LRS, TLS 1.2, no public blobs)
     ├── Container: artifacts
     └── Container: logs
-
+```
 
 ---
 
@@ -84,30 +88,33 @@ Resource Group: rg-myapp-dev-eus
 - Quota sharing: No
 - Recommendation: Enterprise / regulated workloads
 
-**Decision**: Resource Groups with strict RBAC and Azure Policy enforcement. The module is provider-agnostic, so migrating to per-subscription isolation requires only changing the 'provider' alias — no module changes needed.
+**Decision**: Resource Groups with strict RBAC and Azure Policy enforcement. The module is provider-agnostic, so migrating to per-subscription isolation requires only changing the `provider` alias — no module changes needed.
+
 
 ### Naming convention
 
-'''
+```
 <type>-<app>-<environment>-<region_short>
-'''
+```
 
-Examples: 'rg-myapp-dev-eus', 'vnet-myapp-prod-wus2', 'vm-myapp-dev-eus'
+Examples: `rg-myapp-dev-eus`, `vnet-myapp-prod-wus2`, `vm-myapp-dev-eus`
 
 Benefits: instantly identifies resource purpose, environment, and region in Cost Management, Activity Log, and error messages.
+
 
 ### Tagging strategy
 
 All resources receive mandatory tags injected at the module and environment level:
 
-- **environment** ('dev' / 'prod') — Filter resources in Cost Analysis
-- **region** ('eastus') — Multi-region tracking
-- **app** ('myapp') — Cost attribution per application
-- **managed_by** ('terraform') — Distinguish IaC from click-ops
-- **cost_center** ('engineering') — Chargeback
-- **owner** ('platform-team') — On-call escalation
+- **environment** (`dev` / `prod`) — Filter resources in Cost Analysis
+- **region** (`eastus`) — Multi-region tracking
+- **app** (`myapp`) — Cost attribution per application
+- **managed_by** (`terraform`) — Distinguish IaC from click-ops
+- **cost_center** (`engineering`) — Chargeback
+- **owner** (`platform-team`) — On-call escalation
 
-**Enforcement**: Azure Policy 'Deny' effect can reject any resource missing required tags. A 'DeployIfNotExists' policy can back-fill tags inherited from the Resource Group.
+**Enforcement**: Azure Policy `Deny` effect can reject any resource missing required tags. A `DeployIfNotExists` policy can back-fill tags inherited from the Resource Group.
+
 
 ### Dev vs. Prod differences
 
@@ -124,13 +131,13 @@ All resources receive mandatory tags injected at the module and environment leve
 
 ## Code Quality Tools
 
-### Pre-commit hooks ('.pre-commit-config.yaml')
+### Pre-commit hooks (`.pre-commit-config.yaml`)
 
-'''bash
+```bash
 pip install pre-commit
 pre-commit install          # installs git hooks
 pre-commit run --all-files  # run manually
-'''
+```
 
 - **terraform fmt** — Canonical HCL formatting
 - **terraform validate** — Syntax and schema validation
@@ -141,12 +148,11 @@ pre-commit run --all-files  # run manually
 - **detect-secrets** — Prevent accidental credential commits
 
 
-
 ### Additional tooling recommendations
 
-- **'terraform-docs'** — auto-generate module documentation (runs in CI)
-- **'infracost'** — estimate monthly cost before 'apply' (add as a CI step)
-- **'atlantis'** — self-hosted Terraform PR automation (alternative to GitHub Actions)
+- **terraform-docs** — auto-generate module documentation (runs in CI)
+- **infracost** — estimate monthly cost before `apply` (add as a CI step)
+- **atlantis** — self-hosted Terraform PR automation (alternative to GitHub Actions)
 - **Renovate / Dependabot** — keep provider versions current
 - **Azure Policy** — enforce tags, allowed regions, allowed VM SKUs at the platform layer
 
@@ -156,32 +162,38 @@ pre-commit run --all-files  # run manually
 ### Prerequisites
 
 - Terraform >= 1.5
-- Azure CLI ('az login')
+- Azure CLI (`az login`)
 - An Azure subscription
 
 
 ## GitHub Actions Setup
-We usually create this part thorugh the manual effort but have been using the az cli a lot for automating this into separate workflows.
+
+We usually create this part through manual effort but have been using the az cli a lot for automating this into separate workflows.
 
 1. Create a Service Principal:
+
+```bash
    az ad sp create-for-rbac --name "sp-github-actions-myapp" \
      --role Contributor \
-     --scopes /subscriptions/<SUBSCRIPTION_ID> \
+     --scopes /subscriptions/ \
      --sdk-auth
+```
 
 2. Add secrets to GitHub repository:
-   - 'ARM_CLIENT_ID'
-   - 'ARM_TENANT_ID'
-   - 'ARM_SUBSCRIPTION_ID'
-   - 'ARM_CLIENT_SECRET'
-   - 'VM_SSH_PUBLIC_KEY'
+   - `ARM_CLIENT_ID`
+   - `ARM_TENANT_ID`
+   - `ARM_SUBSCRIPTION_ID`
+   - `ARM_CLIENT_SECRET`
+   - `VM_SSH_PUBLIC_KEY`
 
-3. Configure GitHub Environments ('dev', 'prod') with required reviewers for 'prod'.
+3. Configure GitHub Environments (`dev`, `prod`) with required reviewers for `prod`.
 
-4. Push to 'main' — the pipeline runs automatically.
+4. Push to `main` — the pipeline runs automatically.
 
 
 ## Release Lifecycle
+
+```
 feature/* branch
     │
     ├─ pre-commit hooks (local)
@@ -199,3 +211,4 @@ feature/* branch
                  Manual approval (GitHub Environment)
                        │
                └─ terraform apply (prod) [gated]
+```
