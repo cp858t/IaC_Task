@@ -1,7 +1,7 @@
 # environments/dev/terraform.tfvars
 # Non-sensitive variable values for the dev environment.
 # Secrets (vm_admin_ssh_public_key) are injected via CI environment variables
-# or a secrets manager — never committed to source control.
+
 
 app_name     = "myapp"
 environment  = "dev"
