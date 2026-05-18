@@ -1,4 +1,4 @@
-# Azure IaC – Terraform Challenge
+# Azure IaC – Terraform Challenge.
 
 Reusable, secure, multi-environment Azure infrastructure using Terraform.
 
