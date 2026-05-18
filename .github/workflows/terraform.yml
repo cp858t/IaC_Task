@@ -1,12 +1,12 @@
-###############################################################################
+#################################################################################################################
 # GitHub Actions – Terraform CI/CD
 #
 # Release lifecycle:
 #
-#  ┌──────────┐   PR opened    ┌──────────┐   Merged to main   ┌──────────┐
-#  │  Feature  │ ─────────────▶│  validate │ ──────────────────▶│  plan    │
-#  │  branch   │               │  + plan   │                    │  + apply │
-#  └──────────┘               └──────────┘                    │  (dev)   │
+#  ┌──────────┐   PR opened   ┌──────────┐   Merged to main    ┌──────────┐
+#  │  Feature │─────────────▶|  validate │ ──────────────────▶│  plan    │
+#  │  branch  │               |  + plan   │                    │  + apply │
+#  └──────────┘               └──────────┘                     │  (dev)   │
 #                                                              └────┬─────┘
 #                                                                   │ manual approval
 #                                                              ┌────▼─────┐
@@ -14,13 +14,13 @@
 #                                                              │  (prod)  │
 #                                                              └──────────┘
 #
-# Secrets required (set in GitHub → Settings → Secrets and variables):
-#   ARM_CLIENT_ID          – Azure service principal / OIDC app
+# Secrets required (Not setting up right now):
+#   ARM_CLIENT_ID          – Azure service principal  inside entra id in azure / OIDC app
 #   ARM_TENANT_ID
 #   ARM_SUBSCRIPTION_ID
-#   ARM_CLIENT_SECRET      – omit if using OIDC federated credentials
+#   ARM_CLIENT_SECRET(Fed on branch basis)      – omit if using OIDC federated credentials
 #   VM_SSH_PUBLIC_KEY      – SSH public key injected as TF_VAR_vm_admin_ssh_public_key
-###############################################################################
+##################################################################################################################
 
 name: Terraform CI/CD
 
@@ -86,14 +86,14 @@ jobs:
       - name: Terraform Format Check
         run: |
           terraform fmt -check -recursive .
-          echo "✅ Format check passed"
+          echo " Format check passed"
 
       - name: Validate module
         working-directory: modules/vnet
         run: |
           terraform init -backend=false
           terraform validate
-          echo "✅ Module validation passed"
+          echo " Module validation passed"
 
       - name: Validate dev environment
         working-directory: environments/dev
@@ -116,7 +116,7 @@ jobs:
       - name: Run tflint
         run: |
           tflint --recursive
-          echo "✅ tflint passed"
+          echo "tflint passed"
 
       - name: Run tfsec (security scan)
         uses: aquasecurity/tfsec-action@v1.0.3
@@ -129,7 +129,7 @@ jobs:
             https://github.com/terraform-docs/terraform-docs/releases/download/v0.17.0/terraform-docs-v0.17.0-linux-amd64.tar.gz
           tar -xzf /tmp/terraform-docs.tar.gz -C /usr/local/bin
           terraform-docs markdown table --output-file README.md modules/vnet
-          echo "📄 Module docs refreshed"
+          echo " Module docs refreshed"
 
 ###############################################################################
 # Job 2: Plan dev (runs on PR and on push to main)
